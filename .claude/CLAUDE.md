@@ -1,10 +1,5 @@
 # Claude Pet (CMP) — 프로젝트 규칙
 
-> ⚠️ **폴더 이전 진행 중** (이 블록이 있으면 이전 미완료 상태)
-> 사용자에게 다른 질문을 받더라도, 먼저 `docs/migration.md` 를 읽고
-> 현재 working directory 와 `~/.claude/projects/` 상태를 확인한 뒤
-> 남은 Phase 를 안내하세요. 모든 Phase 완료 후 이 블록과 `docs/migration.md` 둘 다 삭제.
-
 Kotlin + Compose Multiplatform 기반 크로스 플랫폼(Windows/macOS) 데스크톱 펫.
 모든 작업은 본 문서 + `rules/*.md` + 사용자 글로벌 규칙을 따른다.
 
