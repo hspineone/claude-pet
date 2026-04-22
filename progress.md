@@ -1,306 +1,81 @@
-# Claude Pet (CMP) — Progress
+# Claude Pet — Progress
 
-> 단일 모듈 Compose Multiplatform Desktop. Windows / macOS 공용.
-> PRD: [docs/prd.md](docs/prd.md)
+> 현재 작업 중인 한 기능 사이클의 SPEC 정의.
+> 기능 완료 시 다음 사이클에 맞춰 재작성됨.
+> 과거 사이클은 CHANGELOG / git log / PRD 참조.
 
-## 전체 구조
+## 목표
 
-```
-cluade-pet/
-├── .claude/              ← 프로젝트 특화 규칙/에이전트/훅
-├── composeApp/
-│   └── src/jvmMain/
-│       ├── kotlin/com/myclaudepet/
-│       │   ├── ui/       ← Composable, StateHolder, Theme
-│       │   ├── domain/   ← Pure Kotlin: model / repository / usecase
-│       │   ├── data/     ← SQLDelight, JNativeHook, DataStore
-│       │   └── di/       ← Koin modules
-│       ├── resources/
-│       └── sqldelight/
-├── docs/prd.md
-└── progress.md
-```
+OS 무관하게 "Claude 사용 여부" 만으로 Working 상태가 동기화되도록, Windows 작업 감지를 macOS 와 동등한 경로로 완성하고 Claude CLI 감지를 단일 구현으로 통합한다.
 
-## 범례
+관련 PRD: §10 (FR-19 개정, FR-22, FR-23, FR-24, FR-25, NFR-06~08)
 
-- `[ ]` 미완료 · `[x]` 완료 · `[~]` 진행 중 · `[!]` 블록
+## 원칙 / 제약
 
----
+- 감지 단위는 "Claude Code CLI 프로세스 존재 여부". 설치 방식(전용 바이너리 / npm global / 쉘 래퍼) 에 독립적.
+- OS 동등: Windows 와 macOS 는 같은 감지 경로 · 같은 전이 조건 · 같은 확신도.
+- 우회 금지: 플랫폼별로 조건을 느슨하게 하거나 "Windows 는 CLI 만으로 Working" 같은 비대칭 로직 만들지 않는다.
+- Windows 포그라운드 감지는 JNA (net.java.dev.jna) 도입 — 번들 크기 약 1.5 MB 증가 허용.
+- `ProcessHandle.allProcesses()` 폴링은 5초 주기 이내. 유휴 CPU 영향 < 0.5%p.
+- 감지 실패 시 조용히 false/null 폴백. 앱 정상 동작 유지.
 
-## Phase 1 · 기반 ✓
+## SPEC 분해
 
-### SPEC-001 · `.claude` 프로젝트 특화 설정
-EARS: WHEN 프로젝트가 초기화되면 SHALL `.claude/` 에 CLAUDE.md / rules / agents / skills / hooks 가 존재한다.
+### SPEC-001 · Claude CLI 감지 ProcessHandle 전환 (macOS·Windows 공통)
+EARS: WHEN CLI 감지가 호출되면 SHALL `ProcessHandle.allProcesses()` 를 순회하며 (a) `Info.command()` basename 이 `claude`/`claude.exe` 이거나 (b) `Info.commandLine()` 에 Claude Code 스크립트 경로 토큰(`@anthropic-ai/claude-code`, `/.bin/claude`, `\.bin\claude`, `/claude.cmd`, `\claude.ps1`) 이 포함되면 true 를 반환한다. POSIX `pgrep` 의존성은 제거한다.
 
-- [x] `.claude/CLAUDE.md`
-- [x] `.claude/rules/layer-dependency.md`
-- [x] `.claude/rules/kotlin-conventions.md`
-- [x] `.claude/rules/compose-ui.md`
-- [x] `.claude/agents/compose-ui-expert.md`
-- [x] `.claude/agents/kotlin-arch-reviewer.md`
-- [x] `.claude/agents/sqldelight-schema.md`
-- [x] `.claude/skills/rr/SKILL.md`
-- [x] `.claude/hooks/post-edit-kotlin.sh` + `.claude/settings.json`
+- [ ] `data/platform/ClaudeCliProbe.kt` 를 `ProcessHandle` 기반으로 재작성
+- [ ] 이미지 이름 정확 일치 판정 (basename, 대소문자 무시)
+- [ ] Command line 토큰 패턴 매칭 (정규식, 플랫폼 경로 구분자 포괄)
+- [ ] `isPosix` 분기 · `pgrep` ProcessBuilder 호출 제거
+- [ ] macOS 회귀 검증: 기존 `pgrep -x claude` 가 잡던 시나리오가 그대로 동작
+- [ ] macOS 신규 감지 검증: npm global 설치된 `claude` 도 `commandLine()` 토큰으로 감지
+- [ ] 빌드 검증: `./gradlew :composeApp:compileKotlinJvm`
+- [ ] 실행 검증: `./gradlew :composeApp:run` macOS 기동, Working 전이 회귀 없음
 
-### SPEC-002 · PRD / 진행 문서 ✓
-- [x] `docs/prd.md` (EARS 포맷)
-- [x] `progress.md` (본 문서)
+### SPEC-002 · Windows 포그라운드 감지 (JNA 도입)
+EARS: WHEN Windows 에서 `ForegroundAppProbe.current()` 가 호출되면 SHALL `User32.GetForegroundWindow` → `GetWindowThreadProcessId` → `Kernel32.OpenProcess` + `QueryFullProcessImageNameW` 를 통해 포그라운드 프로세스의 실행 파일 basename 을 반환한다. 실패 시 null.
 
----
+- [ ] `gradle/libs.versions.toml` 에 `net.java.dev.jna:jna-platform` 버전 추가 (**확인 필요** — 최신 5.x 안정 버전)
+- [ ] `composeApp/build.gradle.kts` 에 의존성 추가 (jvmMain runtime)
+- [ ] `data/platform/ForegroundAppProbe.kt` 를 `os.name` 기반 분기 구조로 리팩토링
+  - macOS: 현재 `osascript` 경로 유지
+  - Windows: JNA 기반 신규 구현
+  - 기타: null
+- [ ] 실패 시 조용히 null 반환 (예외 로깅은 FINE 레벨)
+- [ ] nativeDistributions 모듈 설정 검토 — JNA 가 jlink 에 안전하게 포함되는지 확인, 필요 시 `java.management` 등 추가
+- [ ] 빌드 검증: macOS `./gradlew :composeApp:compileKotlinJvm`
+- [ ] 실행 검증: macOS `./gradlew :composeApp:run` — JNA 미사용 경로라 회귀 없음
+- [ ] **확인 필요**: Windows 머신에서 `./gradlew.bat :composeApp:run` 기동 + 포그라운드 전환 시 probe 가 실행 파일명 반환
 
-## Phase 2 · 빌드 체계
+### SPEC-003 · 작업 화이트리스트 확장 (양 OS · AI 채팅 데스크탑 포함)
+EARS: WHEN 포그라운드 앱 이름이 화이트리스트와 대조되면 SHALL 플랫폼별 바이너리명 + AI 채팅 데스크탑을 포괄한 최신 집합을 사용한다. 매칭은 대소문자 무시.
 
-### SPEC-003 · Gradle 프로젝트
-EARS: WHEN 개발자가 `./gradlew :composeApp:run` 을 실행하면 SHALL Compose Desktop 앱이 뜬다.
+- [ ] 화이트리스트 상수를 `PetStateHolder` 상단에서 `data/platform/WorkAppWhitelist.kt` 로 분리 (플랫폼별 Set 제공)
+- [ ] macOS 집합: 기존(IntelliJ IDEA, PyCharm, WebStorm, Android Studio, Code, Cursor, Xcode, Terminal, iTerm2, Sublime Text) + **Windsurf, Zed, Fleet** + **Claude, ChatGPT** (AI 채팅 데스크탑)
+- [ ] Windows 집합 신설:
+  - IDE/에디터: `Code.exe`, `Cursor.exe`, `Windsurf.exe`, `Zed.exe`, `idea64.exe`, `pycharm64.exe`, `webstorm64.exe`, `studio64.exe`, `fleet.exe`, `devenv.exe`, `sublime_text.exe`, `goland64.exe`, `rubymine64.exe`, `clion64.exe`, `rider64.exe`
+  - 터미널: `WindowsTerminal.exe`, `wt.exe`, `powershell.exe`, `pwsh.exe`, `cmd.exe`, `mintty.exe` (Git Bash), `WezTerm.exe`, `alacritty.exe`, `kitty.exe`, `Hyper.exe`, `ConEmu*.exe`
+  - AI 채팅 데스크탑: `Claude.exe`, `ChatGPT.exe` (**확인 필요** — 실제 설치본에서 바이너리명 검증)
+- [ ] "터미널 그룹" 판정 함수 분리 — FR-22 의 `isFrontTerminal` 에서 사용
+- [ ] `PetStateHolder.launchForegroundProbe()` 가 현재 OS 에 해당하는 Set 을 선택하도록 수정
+- [ ] 빌드 검증: compileKotlinJvm
+- [ ] 실행 검증: macOS 에서 IntelliJ / Terminal / Claude Desktop 포커스 각각 Working 전이 확인
+- [ ] **확인 필요**: Windows 에서 VS Code / PowerShell / Claude Desktop 포커스 시 Working 전이 실측
 
-- [x] `settings.gradle.kts`
-- [x] `gradle.properties`
-- [x] `gradle/libs.versions.toml`
-- [x] `build.gradle.kts` (root)
-- [x] `composeApp/build.gradle.kts`
-- [ ] Gradle Wrapper (`./gradlew`) — **확인 필요** (사용자가 `gradle wrapper` 1회 실행 필요)
-- [ ] 빌드 검증: `./gradlew :composeApp:compileKotlinJvm` — **확인 필요** (로컬 미실행)
+## Out of Scope
 
----
-
-## Phase 3 · 도메인 ✓
-
-### SPEC-004 · 모델 ✓
-- [x] `domain/model/Pet.kt`
-- [x] `domain/model/Satiation.kt` (value class)
-- [x] `domain/model/Affinity.kt` (value class, level 파생)
-- [x] `domain/model/PetMood.kt`
-- [x] `domain/model/Dialogue.kt` + `DialogueTier.kt` + `PetPosition.kt`
-
-### SPEC-005 · Repository 계약 ✓
-- [x] `domain/repository/PetRepository.kt`
-- [x] `domain/repository/InputEventSource.kt`
-
-### SPEC-006 · UseCase ✓
-- [x] `ObservePetUseCase`
-- [x] `InteractWithPetUseCase`
-- [x] `FeedOnKeystrokeUseCase`
-- [x] `TickSatiationUseCase`
-- [x] `MovePetUseCase`
-
----
-
-## Phase 4 · 데이터 ✓
-
-### SPEC-007 · SQLDelight 스키마 ✓
-- [x] `src/commonMain/sqldelight/com/myclaudepet/db/PetState.sq` (KMP 기본 경로 — 초기 `jvmMain/sqldelight`에 뒀다가 `commonMain/sqldelight`로 이전해 generated 소스 해결)
-- [x] 테이블 `pet_state` — 도메인 `Pet` data class와 이름 충돌 회피
-- [x] `data/database/DriverFactory.kt` (항상 Schema.create 호출 — CREATE TABLE IF NOT EXISTS로 idempotent, 빈 DB 크래시 방지)
-- [x] `data/database/PetDatabaseProvider.kt`
-- [x] `data/database/AppPaths.kt` (OS별 기본 경로)
-
-### SPEC-008 · Repository 구현 ✓
-- [x] `data/repository/SqlDelightPetRepository.kt`
-
-### SPEC-009 · 전역 입력 소스 ✓
-- [x] `data/input/JNativeHookInputSource.kt`
-- [x] 권한 없을 때 silent fallback
-
-### SPEC-010 · 시간 제공자 ✓
-- [x] `data/time/Clock.kt`
-
----
-
-## Phase 5 · UI ✓
-
-### SPEC-011 · 테마 / 토큰 ✓
-- [x] `ui/theme/PetTheme.kt`
-- [x] `ui/theme/PetColors.kt`
-- [x] `ui/theme/PetDimens.kt`
-- [x] `ui/theme/PetStrings.kt` (대사 팩 25개)
-
-### SPEC-012 · 펫 Composable ✓
-- [x] `ui/pet/PetCharacter.kt` (Canvas 드로잉 + 호흡 애니메이션)
-- [x] `ui/pet/SpeechBubble.kt`
-- [x] `ui/pet/StatsOverlay.kt`
-
-### SPEC-013 · StateHolder ✓
-- [x] `ui/state/PetUiState.kt`
-- [x] `ui/state/PetUiEvent.kt`
-- [x] `ui/state/PetStateHolder.kt`
-
-### SPEC-014 · 메인 화면 + 윈도우 ✓
-- [x] `ui/pet/PetScreen.kt`
-- [x] Main.kt 에서 투명/무프레임/항상-위/드래그 윈도우
-
-### SPEC-015 · 시스템 트레이 ✓
-- [x] `ui/tray/PetTray.kt`
-- [x] Show/Hide / Quit 메뉴
-
----
-
-## Phase 6 · 조립 ✓
-
-### SPEC-016 · DI ✓
-- [x] `di/AppModule.kt`
-- [x] `di/AppScope.kt`
-
-### SPEC-017 · 진입점 ✓
-- [x] `Main.kt`
-- [x] 백그라운드 틱 런처 (PetStateHolder.launchTick)
-- [x] 초기 Pet 로드는 runBlocking 1회
-
-### SPEC-018 · 문서화 ✓
-- [x] `README.md` (Mac/Win 실행, 접근성 권한 안내)
-
----
-
-## Phase 7 · 배포 (v1 마무리)
-
-### SPEC-019 · jpackage 빌드
-- [x] macOS `./gradlew :composeApp:packageDmg` 성공 (`ClaudePet-1.0.0.dmg` 123 MB 생성)
-- [x] 번들 JRE 에 `java.sql / java.instrument / jdk.unsupported` 모듈 포함 (SQLDelight 구동 필수)
-- [x] 설치 후 `/Applications/ClaudePet.app` 바이너리 직접 실행 → JVM 정상 기동 확인
-- [ ] Windows `.msi` — Windows 머신에서 빌드 필요 (별도 SPEC)
-
-### SPEC-019b · 개발 환경 JDK 고정
-- [x] Temurin/Corretto 21.0.10 의 macOS arm64 SIGTRAP 이슈 확인
-- [x] JBR 21.0.10+7-b1163.110 수동 설치 (`~/Library/Java/JavaVirtualMachines/jbrsdk-21.0.10-...`)
-- [x] `gradle.properties` 에 `org.gradle.java.home` 로 JBR 경로 고정 (로컬 개발 전용, 배포물 무관)
-- [x] `kotlin-stdlib-jdk7/jdk8:1.9.24` 레거시 jar 트랜지티브 배제 (`configurations.all { exclude(...) }`)
-
----
-
-## 알려진 제약 / 확인 필요
-
-- [ ] Gradle 로컬 빌드 미검증 — 사용자 환경에서 `gradle wrapper` 실행 후 `./gradlew :composeApp:run` 으로 검증 필요
-- [ ] macOS 첫 실행 시 "손쉬운 사용" 권한 부여 필요 (없으면 타이핑 카운터만 동작 안 함, 나머지 정상)
-- [ ] Windows 첫 실행 시 SmartScreen 경고 가능 (jpackage 서명 미적용)
-
-## 자체 리뷰에서 해결된 이슈
-
-- [x] SQLDelight 이름 충돌 (`Pet` table → `pet_state` 로 변경)
-- [x] `uiState?.let { rememberWindowState(...) }` → composition 루트에서 1회 생성
-- [x] Koin 구버전 `KoinJavaComponent` → `GlobalContext.get()`
-- [x] `data → ui` 역방향 의존 (`ScreenDefaults` 를 `ui/pet/` → `data/platform/` 으로 이동)
-- [x] 빈 DB 파일 존재 시 `Schema.create` 미호출 크래시 → 항상 호출로 변경
-- [x] 대사 리스트 `ui/theme/PetStrings.Dialogues` → `domain/model/DialogueCatalog` 로 이동
-- [x] `PetCharacter.kt` / `StatsOverlay.kt` fully-qualified 타입 import 정리
-
-## 추가 SPEC — 접근성 권한 UX
-
-### SPEC-020 · 권한 실패 감지 + 다이얼로그 ✓
-EARS: WHEN `InputEventSource.start()` 가 `PermissionDenied` 를 반환하면 SHALL UI가 모달 다이얼로그로 설정 열기 버튼을 노출한다.
-
-- [x] `domain/repository/InputEventSource.StartResult` enum 추가
-- [x] `JNativeHookInputSource` 가 `NativeHookException.DARWIN_AXAPI_DISABLED` 구분 반환
-- [x] `domain/repository/PlatformBridge` 인터페이스 (UI → 플랫폼 동작 위임)
-- [x] `data/platform/SystemSettings.kt` + `SystemPlatformBridge` 구현
-- [x] `ui/pet/PermissionDialog.kt` (DialogWindow + 설정 열기)
-- [x] `PetUiEvent.OpenAccessibilitySettings` / `DismissPermissionDialog` 추가
-- [x] Main.kt 에 `PermissionDialog` 마운트
-- [x] DI 모듈에 `PlatformBridge` 바인딩
-
-## Out of Scope (PRD §7 참조)
-
-- 클라우드 동기화
-- 다국어(한국어 only)
-- Linux
-- 자동 업데이트
-- 계정 시스템
+- Antigravity / Codex 데스크탑 바이너리명 확정 — 사용자가 실제 설치본 확인 후 별도 작업
+- Claude 외 AI CLI (Codex, Gemini) 통합 감지
+- Windows 서명 / Authenticode
+- Linux 작업 감지
 
 ## Completion Promise
 
-PRD §8 의 모든 항목이 체크되면 v1 완료.
-
----
-
-## Phase 8 · 찐따 펫 확장 (v2, PRD §9)
-
-> 참조: cchh494/claude-pet (Swift, All Rights Reserved).
-> 이미지·대사는 복제 금지. 메커닉만 참고, 오리지널 재구현.
-
-### SPEC-021 · 이미지 로딩 인프라 + AI 프롬프트 ✓
-EARS: WHEN `PetUiState.state` 가 10가지 상태 중 하나가 되면 SHALL 해당 PNG 로 렌더, 리소스 없을 때 Canvas fallback.
-
-- [x] `composeApp/src/jvmMain/resources/pet/` 디렉토리 + `.gitkeep`
-- [x] `ui/pet/PetSprite.kt` — 리소스 로더 (useResource + runCatching, null fallback)
-- [x] `domain/model/PetAnimationState.kt` — 10가지 enum + `PetMood.toAnimationState()` 호환 매핑
-- [x] `ui/pet/PetCharacter.kt` 를 스프라이트 우선 + Canvas fallback 구조로 교체
-- [x] `docs/ai-sprite-prompts.md` — 10개 상태별 AI 프롬프트 + 공통 스타일 가이드
-- [x] 빌드 검증: `./gradlew :composeApp:compileKotlinJvm` 성공 (deprecation warning 2건은 의도적 유지)
-- [x] 실행 검증: `./gradlew :composeApp:run` 기동 성공, Canvas fallback 렌더 (PNG 미배치 상태)
-- [ ] **사용자 액션 필요**: `docs/ai-sprite-prompts.md` 의 프롬프트로 PNG 10장 생성 후 `composeApp/src/jvmMain/resources/pet/` 에 배치
-
-### SPEC-022-R · 기반 통합 + 상태 대사 + 수동/자동 리셋 ✓
-EARS: WHEN 상태 전이가 일어나면 SHALL 해당 상태 대사를 자동 노출; WHEN 새 배포 빌드가 실행되거나 우클릭 초기화가 실행되면 SHALL level·satiation·keystrokes 를 리셋.
-
-- [x] `PetState.sq` 에 `animation_state`, `install_id` 컬럼 추가 + `resetProgress`, `updateAnimationState`, `updateInstallId`, `selectInstallId` 쿼리
-- [x] `DriverFactory` 에 `PRAGMA user_version` 기반 마이그레이션 (v1→v2: DROP + recreate)
-- [x] `data/install/InstallId.kt` — 번들 리소스 `install_id.txt` 로더
-- [x] `composeApp/build.gradle.kts` — `generateInstallId` 태스크, 배포 태스크에만 의존, `jvmMain/resources` 에 srcDir 추가
-- [x] `SqlDelightPetRepository` — 부팅 시 install_id 불일치면 자동 `resetProgress` + `updateInstallId`
-- [x] `domain/model/Pet.animationState` 필드 도입, DB 매핑 갱신
-- [x] `PetAnimationState.dialogueTrigger` 매핑 (10개 상태 → 10개 트리거)
-- [x] `DialogueTrigger` 확장: Idle, Smile, Boring, Jumping, Touch, Hungry, Fed, WorkingPrepare, Working, WorkingEnd
-- [x] `DialogueCatalog` — Formal tier 상태별 찐따톤 대사 30여 개 추가
-- [x] `PetStateHolder` — 상태 전이 감지 시 자동 대사 노출, `IDLE_SPEECH_ODDS = 3` 로 명확화, speech 타이머 race 해결 (이전 job cancel), `syncAnimationStateFromSatiation` 으로 포만도 ≤ 20 시 Hungry 전이
-- [x] `ResetPetUseCase` + DI 등록
-- [x] `PetUiEvent` 에 `RequestReset / ConfirmReset / CancelReset` + `PetUiState.resetConfirmVisible`
-- [x] `ContextMenuArea` 로 펫 우클릭 시 "처음부터 시작…" 메뉴
-- [x] `ResetDialog` — 확인 다이얼로그 (취소/초기화)
-- [x] `Main.kt` 에 `ResetDialog` 마운트
-- [x] `StatsOverlay` — "Lv.3  50/100" 진행도 수치 표기
-- [x] `Affinity.pointsInCurrentLevel` 파생 프로퍼티
-- [x] `PetCharacter(state, mood)` 로 시그니처 변경, `toAnimationState()` 호환 함수 제거
-- [x] 빌드 검증: `./gradlew :composeApp:compileKotlinJvm` 성공
-- [x] 실행 검증: `./gradlew :composeApp:run` JBR 로 기동, 크래시 없음
-
-### SPEC-023 · 행동 루프 (자동이동 + 점프 + 터치 + Boring) ✓
-EARS: WHILE idle 이면 SHALL 10~30초 랜덤 이동, 1/6 확률 점프, 5분+ 상호작용 없으면 Boring.
-
-- [x] `PetStateHolder.launchBehaviorLoop()` — 10~30초 랜덤 간격 tryBehaviorTick
-- [x] 이동: `ScreenDefaults.bounds()` 로 화면 clamp, `_targetPosition` SharedFlow 방출
-- [x] `Main.kt` 가 `targetPosition` 구독 → `windowState.position` 반영
-- [x] 점프: `Jumping` 상태 0.5초 + `PetCharacter.offset(y)` tween 애니메이션 (창은 고정, 캐릭터만 튐)
-- [x] 터치: `onDoubleTap` → `DoubleClicked` 이벤트 → `Touch` 상태 0.5초 후 Default 복귀
-- [x] Boring: `lastInteractionMillis` 추적, 5분 초과 + Default 상태일 때 `Boring` 전이
-- [x] 컴파일/실행 검증 성공
-
-### SPEC-024 · 밥 주기 + Fed 상태 ✓
-EARS: WHEN 트레이 "밥 주기" 선택 시 SHALL satiation=Full, affinity+5, `Fed` 상태 3초 유지 후 Default.
-
-- [x] `domain/usecase/FeedPetUseCase.kt` 신규
-- [x] `PetUiEvent.Feed` 이벤트
-- [x] `Main.kt` Tray 메뉴에 "🍚 밥 주기" 항목 추가
-- [x] `PetStateHolder.onFeed()` — 3초 유지 후 Default 복귀
-- [x] DI 에 `FeedPetUseCase` 등록, StateHolder 파라미터 추가
-- [x] 포만도 ≤ 20 자동 Hungry 전이는 SPEC-022-R 에서 이미 처리
-
-### SPEC-025 · 찐따톤 대사 풀 전 티어 확장 ✓
-EARS: WHEN 상태 전이 시 SHALL 해당 tier 의 상태별 대사 풀에서 랜덤 발화; 티어 상승 시 자연 변화.
-
-- [x] `DialogueCatalog.kt` 재작성: Formal/Friendly/Casual/Close/Intimate 5개 tier × 10개 상태 + 3개 이벤트 트리거 = 100+ 대사
-- [x] Formal: 찐따톤 존댓말 / Friendly: 살짝 풀린 존댓말 / Casual: 반말 / Close: 친밀 반말 / Intimate: 깊은 애정
-- [x] `pick()` fallback 유지 — 특정 tier 에 없는 조합은 전체 풀에서 랜덤
-
-### SPEC-026 · macOS IDE 감지 + Working 상태 ✓
-EARS: WHEN macOS 포그라운드 앱이 화이트리스트에 속하면 SHALL WorkingPrepare → Working; 이탈 시 WorkingEnd → Default.
-
-- [x] `data/platform/ForegroundAppProbe.kt` — `osascript` System Events 로 현재 포그라운드 앱 이름
-- [x] `PlatformBridge.foregroundAppName()` 메서드 추가, `SystemPlatformBridge` 에서 Probe 위임
-- [x] `PetStateHolder.launchForegroundProbe()` — 5초 주기 폴링, 화이트리스트 일치 감지
-- [x] 화이트리스트: IntelliJ IDEA, PyCharm, WebStorm, Android Studio, Code(VSCode), Cursor, Xcode, Terminal, iTerm/iTerm2, Sublime Text
-- [x] 진입: Prepare 2초 유지 → Working. 이탈: WorkingEnd 2초 유지 → Default
-- [x] Windows/Linux 는 `ForegroundAppProbe.current()` 가 null 반환 → 전이 없음 (no-op)
-
-### SPEC-027 · v2 배포 검증 ✓
-- [x] `./gradlew :composeApp:packageDmg --rerun-tasks` 성공
-- [x] `/Applications/ClaudePet.app` 설치 + 바이너리 직접 실행 정상 기동 (PID 9432)
-- [x] 번들 아이콘 `ClaudePet.icns` 적용 확인
-
-### Out of Scope (Phase 8)
-
-- Windows 에서 포그라운드 앱 감지 (추후 SPEC)
-- 앱 서명/공증
-- 프레임 애니메이션 (정적 PNG 10장만)
-- 다국어
-
-### Completion Promise (Phase 8)
-
-PRD §9.4 의 모든 항목이 체크되면 v2 완료.
+- [ ] `ClaudeCliProbe` 가 `ProcessHandle` 기반으로 재구현되어 macOS·Windows 에서 동일한 결과(이미지 이름 일치 + command line 토큰 포함) 반환
+- [ ] Windows 에서 `ForegroundAppProbe.current()` 가 non-null 을 반환 (JNA Win32 경로)
+- [ ] Windows 에서 VS Code / PowerShell 포그라운드일 때 Working 전이
+- [ ] Windows 에서 Claude Code CLI + Windows Terminal 포커스일 때 Working 전이
+- [ ] Claude Desktop / ChatGPT Desktop 포그라운드일 때 macOS·Windows 양쪽에서 Working 전이
+- [ ] macOS 기존 시나리오(IntelliJ·Terminal·Code 포그라운드, Claude CLI 감지) 전부 회귀 없음
+- [ ] `./gradlew :composeApp:packageDmg` 및 `packageMsi` 결과 번들에서 전 기능 동작

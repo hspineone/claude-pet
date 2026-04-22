@@ -108,13 +108,15 @@ v1 완료 조건:
 | FR-16 | WHILE 앱이 실행 중이면 SHALL 분당 1 씩 포만도를 감소시킨다. |
 | FR-17 | WHEN 포만도가 20 이하이면 SHALL 상태=hungry 로 전이하고 최소 10초마다 찐따톤 배고픔 대사를 말풍선으로 띄운다. |
 | FR-18 | WHEN 트레이 메뉴 "🍚 밥 주기" 또는 펫 좌클릭(hungry 상태)이 발생하면 SHALL 포만도를 100 으로 올리고, 상태=fed 로 3초 유지 후 default 로 복귀, 호감도 +5 한다. |
-| FR-19 | WHEN macOS 포그라운드 앱이 작업 화이트리스트(IDE/에디터/터미널) 에 속하면 SHALL working_prepare → working 전이를 발생시킨다. (Windows v2 범위 외) |
+| FR-19 | WHEN 포그라운드 앱이 작업 화이트리스트(IDE/에디터/터미널/AI 채팅 데스크탑) 에 속하면 SHALL working_prepare → working 전이를 발생시킨다. (macOS·Windows 동일) |
+| FR-22 | WHEN Claude Code CLI 프로세스(이미지 이름이 `claude`/`claude.exe` 이거나 프로세스 command line 에 Claude Code 스크립트 경로 토큰 포함)가 감지되고 IF 포그라운드가 터미널이면 SHALL working 으로 전이한다. macOS·Windows 단일 감지 경로(JVM `ProcessHandle`)로 구현한다. |
+| FR-23 | WHEN 포그라운드가 Claude Desktop / ChatGPT Desktop 등 AI 채팅 데스크탑 앱이면 SHALL 작업 컨텍스트로 간주해 working 으로 전이한다. |
 | FR-20 | WHEN 상태가 전이되면 SHALL 해당 상태에 대응하는 대사 풀에서 랜덤 1개를 SpeechBubble 로 2.5초간 노출한다. |
 | FR-21 | WHEN 호감도 레벨이 5의 배수를 돌파하면 SHALL 대사 티어를 한 단계 언락하고 이후 선택 풀을 누적 확장한다. |
 
 ### 9.3 Out of Scope (Phase 8)
 
-- Windows 에서의 작업 감지 (NSWorkspace 상응이 없음, 별도 SPEC)
+- Windows 에서의 작업 감지 → **§10 으로 이관**
 - 타이핑 카운터 (기존 FR-05 로 이미 존재, Phase 8 재작업 없음)
 - 앱 서명·공증
 - Lottie/GIF 프레임 시퀀스 (정적 PNG)
@@ -128,3 +130,48 @@ v1 완료 조건:
 - [ ] 상태 전이마다 대사 1개 노출, 호감도 레벨에 따라 티어 확장
 - [ ] IDE 포그라운드 감지로 working 전이 (macOS)
 - [ ] `./gradlew :composeApp:packageDmg` 결과 .dmg 에서 전 기능 동작
+
+---
+
+## 10. v3 — Windows 작업 감지 패리티 + Claude CLI 통합 감지
+
+**배경**: §9 의 `ForegroundAppProbe` 는 macOS 전용, `ClaudeCliProbe` 는 POSIX `pgrep -x claude` 라 Windows 에선 두 기능 모두 no-op. 결과적으로 Windows 사용자는 Claude 를 사용해도 working 전이가 일어나지 않는다. 이 사이클은 "OS 무관하게, Claude 사용 여부에 따라 상태가 동기화된다" 는 근본 동작을 완성한다.
+
+### 10.1 핵심 원칙
+
+1. 감지 단위는 "Claude Code CLI 프로세스 존재 여부". 설치 방식(전용 바이너리 / npm global / 쉘 래퍼) 에 독립적.
+2. OS 동등: Windows·macOS 가 같은 감지 경로·같은 전이 조건·같은 확신도로 움직인다.
+3. 우회 금지: 플랫폼 별로 조건을 느슨하게 하거나 "Windows 는 CLI 만으로 Working" 같은 분기 비대칭을 만들지 않는다.
+
+### 10.2 추가 기능 요구사항 (EARS)
+
+| ID | EARS |
+|---|---|
+| FR-22 (재등록) | WHEN Claude Code CLI 프로세스(이미지 이름 `claude`/`claude.exe` 또는 command line 에 Claude Code 스크립트 경로 토큰 포함)가 감지되고 IF 포그라운드가 터미널이면 SHALL working 으로 전이한다. macOS·Windows 단일 코드 경로(JVM `ProcessHandle`) 사용. |
+| FR-23 (재등록) | WHEN 포그라운드가 Claude Desktop / ChatGPT Desktop 등 AI 채팅 데스크탑 화이트리스트에 속하면 SHALL working 으로 전이한다. |
+| FR-24 | WHEN Windows 에서 사용자가 포그라운드 앱을 전환하면 SHALL Win32 API (`GetForegroundWindow` → `GetWindowThreadProcessId` → `QueryFullProcessImageNameW`) 를 통해 실행 파일명을 가져와 `ForegroundAppProbe` 가 반환한다. |
+| FR-25 | WHEN 작업 화이트리스트가 평가되면 SHALL Windows 실행 파일명 기준 IDE/에디터(VS Code, Cursor, Windsurf, Zed, IntelliJ/PyCharm/WebStorm/Android Studio/기타 JetBrains 제품군, Fleet, Visual Studio, Sublime Text) + 터미널(Windows Terminal, PowerShell, cmd, Git Bash, WezTerm, Alacritty, kitty, Hyper) + AI 채팅 데스크탑(Claude Desktop, ChatGPT Desktop) 을 매칭 대상으로 포함한다. macOS 화이트리스트도 동일 AI 채팅 데스크탑이 추가된다. |
+
+### 10.3 비기능 요구사항
+
+- NFR-06: Windows 포그라운드 감지를 위해 JNA (net.java.dev.jna) 도입. 번들 크기 증가 약 1.5 MB 허용.
+- NFR-07: `ProcessHandle.allProcesses()` 폴링은 5초 주기를 초과하지 않는다(현 macOS 와 동일). 유휴 CPU 영향 < 0.5%p.
+- NFR-08: 감지 실패(권한 제한, API 오류) 시 조용히 false/null 로 폴백하고 앱은 정상 동작을 유지한다.
+
+### 10.4 Out of Scope
+
+- Antigravity / Codex 데스크탑 바이너리명 추가 — 추후 사용자가 실제 설치본 확인 후 별도 PR 로 반영
+- Claude / Codex / Gemini 외 다른 AI CLI 통합 감지
+- Windows 서명 / Authenticode
+- Linux 감지 (구조상 가능하나 우선순위 외)
+
+### 10.5 Completion Promise
+
+- [ ] `ClaudeCliProbe` 가 `ProcessHandle` 기반으로 재구현되어 macOS·Windows 에서 동일한 결과(이미지 이름 일치 + command line 토큰 포함) 를 반환한다
+- [ ] Windows 에서 `ForegroundAppProbe.current()` 가 non-null 을 반환한다 (JNA Win32 경로)
+- [ ] Windows 에서 VS Code / PowerShell 포그라운드일 때 Working 전이가 일어난다
+- [ ] Windows 에서 Claude Code CLI + Windows Terminal 포커스일 때 Working 전이가 일어난다
+- [ ] Claude Desktop / ChatGPT Desktop 포그라운드일 때 macOS·Windows 양쪽에서 Working 전이가 일어난다
+- [ ] macOS 기존 시나리오(IntelliJ·Terminal·Code 포그라운드, Claude CLI 감지) 전부 회귀 없음
+- [ ] `./gradlew :composeApp:packageDmg` 및 `packageMsi` 결과 번들에서 전 기능 동작
+- [ ] `progress.md` 의 Phase 9 체크박스 전부 완료
