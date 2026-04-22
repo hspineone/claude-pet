@@ -5,6 +5,7 @@ import com.myclaudepet.domain.model.DialogueTier
 import com.myclaudepet.domain.model.DialogueTrigger
 import com.myclaudepet.domain.model.PetAnimationState
 import com.myclaudepet.domain.model.dialogueTrigger
+import com.myclaudepet.domain.platform.WorkAppWhitelist
 import com.myclaudepet.domain.repository.InputEventSource
 import com.myclaudepet.domain.repository.InputEventSource.StartResult
 import com.myclaudepet.domain.repository.PetRepository
@@ -84,6 +85,16 @@ class PetStateHolder(
     //    단순 epoch ms 스칼라라 StateFlow 오버헤드 불필요. 여러 스레드 접근 대비 @Volatile.
     @Volatile
     private var lastInteractionMillis: Long = System.currentTimeMillis()
+
+    // 작업 화이트리스트 판정 시 OS 별 규칙을 선택. 1회 감지 후 캐싱.
+    private val platform: WorkAppWhitelist.Platform by lazy {
+        val os = System.getProperty("os.name", "").lowercase()
+        when {
+            os.contains("mac") -> WorkAppWhitelist.Platform.MAC
+            os.contains("win") -> WorkAppWhitelist.Platform.WINDOWS
+            else -> WorkAppWhitelist.Platform.OTHER
+        }
+    }
 
     fun start() {
         permissionRequiredAtStart = inputSource.start() == StartResult.PermissionDenied
@@ -279,14 +290,10 @@ class PetStateHolder(
                 // 자기 자신(ClaudePet) 포커스는 감지 건너뜀. "Claude" 부분일치 오탐 방지.
                 if (front != null && front.contains("ClaudePet", ignoreCase = true)) continue
 
-                val isWorkApp = front != null &&
-                    WORK_APP_NAMES.any { front.contains(it, ignoreCase = true) }
+                val isWorkApp = front != null && WorkAppWhitelist.isWorkApp(front, platform)
                 // claude CLI 감지는 "터미널이 포커스일 때" 만 Working 으로 승격.
                 // (CLI 가 상시 실행되어 영구 Working 고정되는 문제 회피)
-                val isFrontTerminal = front != null && (
-                    front.contains("Terminal", ignoreCase = true) ||
-                    front.contains("iTerm", ignoreCase = true)
-                )
+                val isFrontTerminal = front != null && WorkAppWhitelist.isTerminal(front, platform)
                 val isClaudeCli = platformBridge.isClaudeCliRunning()
                 val isWorkContext = isWorkApp || (isClaudeCli && isFrontTerminal)
 
@@ -440,27 +447,7 @@ class PetStateHolder(
         val WORK_END_DURATION = 2_000.milliseconds
         const val WALK_LEG_MS = 1_800L
 
-        // `osascript ... name of first application process` 이 실제 반환하는 값 기준.
-        // (예: IntelliJ IDEA → "idea", VS Code → "Code", Android Studio → "studio")
-        // 매칭은 front.contains(needle, ignoreCase) 이므로 needle 은 실제 반환값의 부분 문자열.
-        val WORK_APP_NAMES = listOf(
-            "idea",          // IntelliJ IDEA
-            "pycharm",
-            "webstorm",
-            "goland",
-            "rustrover",
-            "clion",
-            "studio",        // Android Studio
-            "Code",          // VS Code
-            "Cursor",
-            "Xcode",
-            "Terminal",
-            "iTerm2",
-            "Sublime Text",
-            "Nova",
-            "Fleet",
-            "Claude",        // Anthropic Claude Desktop
-        )
+        // 작업 화이트리스트는 `domain/platform/WorkAppWhitelist` 로 분리되었다.
 
         const val HUNGRY_BELOW = 20
         const val IDLE_SPEECH_ODDS = 3

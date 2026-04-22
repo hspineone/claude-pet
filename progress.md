@@ -51,17 +51,16 @@ EARS: WHEN Windows 에서 `ForegroundAppProbe.current()` 가 호출되면 SHALL 
 ### SPEC-003 · 작업 화이트리스트 확장 (양 OS · AI 채팅 데스크탑 포함)
 EARS: WHEN 포그라운드 앱 이름이 화이트리스트와 대조되면 SHALL 플랫폼별 바이너리명 + AI 채팅 데스크탑을 포괄한 최신 집합을 사용한다. 매칭은 대소문자 무시.
 
-- [ ] 화이트리스트 상수를 `PetStateHolder` 상단에서 `data/platform/WorkAppWhitelist.kt` 로 분리 (플랫폼별 Set 제공)
-- [ ] macOS 집합: 기존(IntelliJ IDEA, PyCharm, WebStorm, Android Studio, Code, Cursor, Xcode, Terminal, iTerm2, Sublime Text) + **Windsurf, Zed, Fleet** + **Claude, ChatGPT** (AI 채팅 데스크탑)
-- [ ] Windows 집합 신설:
-  - IDE/에디터: `Code.exe`, `Cursor.exe`, `Windsurf.exe`, `Zed.exe`, `idea64.exe`, `pycharm64.exe`, `webstorm64.exe`, `studio64.exe`, `fleet.exe`, `devenv.exe`, `sublime_text.exe`, `goland64.exe`, `rubymine64.exe`, `clion64.exe`, `rider64.exe`
-  - 터미널: `WindowsTerminal.exe`, `wt.exe`, `powershell.exe`, `pwsh.exe`, `cmd.exe`, `mintty.exe` (Git Bash), `WezTerm.exe`, `alacritty.exe`, `kitty.exe`, `Hyper.exe`, `ConEmu*.exe`
-  - AI 채팅 데스크탑: `Claude.exe`, `ChatGPT.exe` (**확인 필요** — 실제 설치본에서 바이너리명 검증)
-- [ ] "터미널 그룹" 판정 함수 분리 — FR-22 의 `isFrontTerminal` 에서 사용
-- [ ] `PetStateHolder.launchForegroundProbe()` 가 현재 OS 에 해당하는 Set 을 선택하도록 수정
-- [ ] 빌드 검증: compileKotlinJvm
-- [ ] 실행 검증: macOS 에서 IntelliJ / Terminal / Claude Desktop 포커스 각각 Working 전이 확인
+- [x] 화이트리스트 상수를 `PetStateHolder` 상단에서 `domain/platform/WorkAppWhitelist.kt` 로 분리 (Pure Kotlin, Platform enum 인자 기반 매칭)
+- [x] macOS 집합: 기존 + **Windsurf, Zed** + **ChatGPT** 추가 (Fleet, Claude 는 기존에 이미 포함)
+- [x] Windows 집합 신설 (IDE/에디터, 터미널, AI 채팅 데스크탑). ConEmu 계열은 prefix 매칭
+- [x] "터미널 그룹" 판정 함수 `isTerminal(frontName, platform)` 분리
+- [x] `PetStateHolder.launchForegroundProbe()` 가 `platform` lazy val 로 OS 감지 후 `WorkAppWhitelist.isWorkApp/isTerminal` 호출
+- [x] 빌드 검증: `./gradlew :composeApp:compileKotlinJvm` 성공
+- [x] 실행 검증: macOS `./gradlew :composeApp:run` 기동 성공 (MainKt PID 감지)
+- [ ] **확인 필요**: macOS 수동 UI 검증 (IntelliJ / Terminal / Claude Desktop 포커스 시 Working 전이)
 - [ ] **확인 필요**: Windows 에서 VS Code / PowerShell / Claude Desktop 포커스 시 Working 전이 실측
+- [ ] **확인 필요**: Claude.exe / ChatGPT.exe 바이너리명이 실제 설치본과 일치하는지
 
 ## Out of Scope
 
