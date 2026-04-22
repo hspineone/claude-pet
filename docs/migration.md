@@ -9,8 +9,8 @@
 
 | 항목 | 최종 경로 |
 |---|---|
-| 프로젝트 | `/Users/hyeonseok/Desktop/personal/cluade-pet` (454MB) |
-| Claude Code 메모리·세션 | `~/.claude/projects/-Users-hyeonseok-Desktop-personal-cluade-pet` (11MB) |
+| 프로젝트 | `/Users/hyeonseok/Desktop/personal/claude-pet` (454MB) |
+| Claude Code 메모리·세션 | `~/.claude/projects/-Users-hyeonseok-Desktop-personal-claude-pet` (11MB) |
 
 정리된 것(휴지통에 있음, 필요시 복구 가능):
 - 옛 유령 `~/Desktop/cluade-pet` → `~/.Trash/cluade-pet.ghost.*`
@@ -25,7 +25,7 @@
 아래 세 명령이 전부 에러 없이 끝나는지 확인:
 
 ```
-cd /Users/hyeonseok/Desktop/personal/cluade-pet
+cd /Users/hyeonseok/Desktop/personal/claude-pet
 git remote -v                                 # SSH URL (git@github.com:HyeonSeok7/claude-pet.git)
 git ls-remote origin HEAD                     # personal SSH 키 인증 성공
 ./gradlew :composeApp:compileKotlinJvm        # 빌드 성공
@@ -38,7 +38,7 @@ git ls-remote origin HEAD                     # personal SSH 키 인증 성공
 ```
 ls ~/.claude/projects/-Users-hyeonseok-Desktop-cluade-pet 2>/dev/null && \
   mv ~/.claude/projects/-Users-hyeonseok-Desktop-cluade-pet/*.jsonl \
-     ~/.claude/projects/-Users-hyeonseok-Desktop-personal-cluade-pet/ 2>/dev/null; \
+     ~/.claude/projects/-Users-hyeonseok-Desktop-personal-claude-pet/ 2>/dev/null; \
 mv ~/.claude/projects/-Users-hyeonseok-Desktop-cluade-pet ~/.Trash/claude-memory-old.$(date +%s) 2>/dev/null
 ```
 
@@ -67,5 +67,5 @@ mv ~/.claude/projects/-Users-hyeonseok-Desktop-cluade-pet ~/.Trash/claude-memory
 
 ## 주의
 
-- 새 경로 `~/Desktop/personal/cluade-pet` 에는 문자열 "pineone" 이 없으므로 `includeIf` 가 발동하지 않아 개인 identity + 개인 SSH 키가 정상 적용됩니다.
+- 새 경로 `~/Desktop/personal/claude-pet` 에는 문자열 "pineone" 이 없으므로 `includeIf` 가 발동하지 않아 개인 identity + 개인 SSH 키가 정상 적용됩니다.
 - Phase 6 전까지 이 파일을 지우지 마세요. 중간 문제 발생 시 복구의 유일한 지침입니다.
