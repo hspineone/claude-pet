@@ -80,9 +80,14 @@ jobs:
           find artifacts -type f \( -name '*.dmg' -o -name '*.msi' \) -exec mv {} release-files/ \;
           ls -lh release-files
 
+      - uses: actions/checkout@v4
+
+      # release-please 가 CHANGELOG 로 본문을 채운 뒤, 공통 설치 안내를 append 한다.
+      # (generate_release_notes 는 release-please 의 변경 로그와 중복되므로 사용하지 않음)
       - uses: softprops/action-gh-release@v2
         with:
           files: release-files/*
-          generate_release_notes: true
+          append_body: true
+          body_path: docs/release-install-footer.md
           draft: false
           prerelease: false

@@ -1,0 +1,25 @@
+name: Release Please
+
+# main 에 쌓인 Conventional Commits 를 읽어
+# - 자동으로 다음 버전(SemVer) 을 계산
+# - Release PR 을 하나 열어두고 커밋이 쌓일 때마다 업데이트
+# - 사용자가 해당 PR 을 Merge 하면 새 태그 vX.Y.Z 를 push → release.yml 이 실제 빌드/배포
+#
+# 즉 이 워크플로는 "버전 관리자" 역할, 실제 .dmg/.msi 빌드는 release.yml 이 담당한다.
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  release-please:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: googleapis/release-please-action@v4
+        with:
+          config-file: release-please-config.json
+          manifest-file: .release-please-manifest.json
