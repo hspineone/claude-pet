@@ -54,9 +54,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # Windows 는 Temurin 21 사용. Zulu 21 Windows 빌드는 jpackage 로 번들 시
+      # runtime\bin\java.exe 가 누락되는 사례가 관측됨(v1.1.0~v1.1.2). macOS 는
+      # arm64 SIGTRAP 회피 위해 Zulu 유지.
       - uses: actions/setup-java@v4
         with:
-          distribution: 'zulu'
+          distribution: 'temurin'
           java-version: '21'
 
       # Windows PowerShell 로 gradle.properties 의 로컬 JDK 라인 제거
