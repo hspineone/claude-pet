@@ -49,6 +49,9 @@ kotlin {
             implementation(libs.koin.compose)
 
             implementation(libs.jnativehook)
+            // Windows 포그라운드 앱 감지를 위한 Win32 API (User32, Kernel32) 바인딩.
+            // macOS/Linux 에서는 사용되지 않지만 jar 번들에는 항상 포함 (런타임 OS 감지 후 사용).
+            implementation(libs.jna.platform)
             implementation(libs.slf4j.simple)
         }
     }
