@@ -10,6 +10,8 @@ name: Release Please
 on:
   push:
     branches: [main]
+  # Release PR 이 누락·중단된 경우 수동 재실행 (`gh workflow run "Release Please"`).
+  workflow_dispatch:
 
 permissions:
   contents: write
