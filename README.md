@@ -44,12 +44,12 @@
 
 ## 📦 다운로드
 
-[Releases](../../releases) 페이지에서 최신 태그를 받으세요.
+[Releases](../../releases) 페이지에서 최신 태그를 받으세요. `.dmg`/`.msi` 는 설치 안내(`설치방법.txt`) 와 함께 **zip 번들** 로 배포됩니다.
 
 | OS | 파일 | 설치 |
 |---|---|---|
-| macOS | `ClaudePet-X.Y.Z.dmg` | 마운트 → `Applications` 로 드래그 |
-| Windows | `ClaudePet-X.Y.Z.msi` | 더블클릭 설치 |
+| macOS | `ClaudePet-X.Y.Z-macos.zip` | 압축 풀기 → `.dmg` 더블클릭 → `Applications` 로 드래그 |
+| Windows | `ClaudePet-X.Y.Z-windows.zip` | 압축 풀기 → `.msi` 더블클릭 설치 |
 
 <details>
 <summary><strong>macOS 보안 경고 해결</strong></summary>
@@ -64,6 +64,17 @@ open /Applications/ClaudePet.app
 첫 실행 시 접근성 권한 다이얼로그의 `완료 (재시작)` 버튼이 권한 부여 후 JVM 재시작까지 한 번에 처리합니다.
 </details>
 
+<details>
+<summary><strong>Windows 에서 "Failed to launch JVM" 이 뜨는 경우</strong></summary>
+
+Authenticode 서명 미적용으로 Windows Defender 가 실행을 차단할 수 있습니다. 해결:
+
+1. 시작 메뉴에서 ClaudePet 우클릭 → **"관리자 권한으로 실행"**
+2. 여전히 실패하면 **Windows Defender 예외 목록**에 `C:\Program Files\ClaudePet` 폴더 추가
+
+비개발자용 단계별 스크린 리딩 가이드: [docs/windows-방화벽-허용-가이드.txt](docs/windows-방화벽-허용-가이드.txt)
+</details>
+
 ---
 
 ## 🎮 주요 기능
@@ -71,10 +82,12 @@ open /Applications/ClaudePet.app
 | 범주 | 동작 |
 |---|---|
 | **행동** | 10초마다 창 내부 왕복 산책 · 1/6 확률 점프 · 5분 방치 시 지루함 |
-| **반응** | 좌클릭 = 미소 · 더블클릭 = 점프 · 우클릭 = 초기화 · 드래그 = 위치 저장 |
-| **생활** | 30초마다 포만감 -1 · 20 이하면 배고픔 · 타이핑이나 트레이 🍚 밥주기로 회복 |
-| **호감도** | 100 pt / Lv, 5 티어 (존댓말 → 반말 → 애정). 100+ 줄 오리지널 대사 |
-| **작업 감지** | 포그라운드가 IDE · Terminal · Claude Desktop 이면 작업 모드. Claude CLI 프로세스도 인식 |
+| **반응** | 좌클릭 = 미소 · 더블클릭 = 점프 · 드래그 = 위치 저장 · **우클릭 = 메뉴** (밥 주기 / 보이기·숨기기 / 처음부터 시작 / 종료) |
+| **생활** | 30초마다 포만감 -1 · 20 이하면 배고픔 · 타이핑이나 트레이·우클릭 🍚 밥주기로 회복 |
+| **호감도** | 100 pt / Lv, 5 티어 (존댓말 → 반말 → 애정). 100+ 줄 오리지널 대사, 우클릭 힌트 포함 |
+| **작업 감지 (macOS)** | 포그라운드가 IDE · 에디터 · 터미널 · AI 채팅 앱이면 작업 모드. Claude CLI 프로세스도 인식. 화이트리스트: IntelliJ / PyCharm / WebStorm / GoLand / Android Studio / VS Code / Cursor / **Windsurf** / **Zed** / **Fleet** / Xcode / Terminal / iTerm2 / Sublime Text / Claude Desktop / ChatGPT Desktop |
+| **작업 감지 (Windows)** | 현재 미구현 — JNA + jpackage 서명 미적용 조합의 Defender 차단 이슈로 롤백, 다음 사이클에서 JDK 22+ FFM 또는 Authenticode 서명 도입 후 재시도 |
+| **Claude CLI 감지** | `ProcessHandle` 기반으로 macOS·Windows 공통. 전용 바이너리 / npm global / 쉘 래퍼 모두 감지 (command line 경로 토큰 매칭) |
 | **자동 업데이트** | 시작 시 GitHub Releases 조회 → 새 버전 다이얼로그 + 브라우저 연결 |
 
 ---
@@ -187,14 +200,16 @@ org.gradle.java.home=/path/to/jbrsdk-21.0.10.../Contents/Home
 
 ### 자동 릴리즈
 
-`.github/workflows/release.yml` 가 태그 push 를 감지해 macOS · Windows 러너에서 병렬 빌드 후 결과물을 GitHub Releases 에 자동 첨부합니다.
+`.github/workflows/release.yml` 가 태그 push 를 감지해 macOS · Windows 러너에서 병렬 빌드 후 **`.dmg`/`.msi` + `설치방법.txt` 를 zip 으로 묶어** GitHub Releases 에 자동 첨부합니다.
 
 ```bash
 # gradle.properties 의 projectVersion 을 올린 뒤
-git tag v1.0.1
-git push --tags
-# → 5~10분 후 Releases 페이지에 .dmg / .msi 업로드 완료
+git tag v1.1.5
+git push origin v1.1.5
+# → 5~10분 후 Releases 페이지에 ClaudePet-1.1.5-macos.zip / ClaudePet-1.1.5-windows.zip 업로드
 ```
+
+버전 관리는 [release-please](.github/workflows/release-please.yml) 가 Conventional Commits 기반으로 Release PR 을 자동 생성 / 갱신하며, 해당 PR 이 머지되면 태그가 찍혀 `release.yml` 이 실행됩니다.
 
 ---
 
