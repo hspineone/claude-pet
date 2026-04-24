@@ -60,6 +60,13 @@ fun main() {
     // Windows/Linux 의 OS DPI 스케일을 1.0 으로 고정. macOS 는 자체 처리.
     System.setProperty("sun.java2d.uiScale", "1")
 
+    // Windows 에서 Skiko 기본 렌더러(DirectX12) 가 transparent 윈도우의 알파 채널을
+    // 완전히 투명으로 composite 하지 못해 펫 주변에 어두운 네모가 남는 현상 회피.
+    // macOS(Metal) / Linux(OpenGL) 는 기본값 유지.
+    if (System.getProperty("os.name", "").lowercase().contains("win")) {
+        System.setProperty("skiko.renderApi", "OPENGL")
+    }
+
     startKoin { modules(appModule) }
     val koin = GlobalContext.get()
     val stateHolder: PetStateHolder = koin.get()
