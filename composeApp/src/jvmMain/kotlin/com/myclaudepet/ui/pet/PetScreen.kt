@@ -28,6 +28,9 @@ fun PetScreen(
     walkOffsetX: Float = 0f,
     walkOffsetY: Float = 0f,
     facingRight: Boolean = true,
+    windowVisible: Boolean = true,
+    onToggleWindowVisible: () -> Unit = {},
+    onExit: () -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
     Box(modifier = modifier.fillMaxSize()) {
@@ -45,8 +48,19 @@ fun PetScreen(
             ContextMenuArea(
                 items = {
                     listOf(
+                        ContextMenuItem(PetStrings.TrayFeed) {
+                            onEvent(PetUiEvent.Feed)
+                        },
+                        ContextMenuItem(
+                            if (windowVisible) PetStrings.TrayHide else PetStrings.TrayShow,
+                        ) {
+                            onToggleWindowVisible()
+                        },
                         ContextMenuItem(PetStrings.MenuReset) {
                             onEvent(PetUiEvent.RequestReset)
+                        },
+                        ContextMenuItem(PetStrings.TrayQuit) {
+                            onExit()
                         },
                     )
                 },

@@ -38,6 +38,7 @@ object DialogueCatalog {
             DialogueLine(t, DialogueTrigger.Idle, "저.. 여기.. 있어.. 요.."),
             DialogueLine(t, DialogueTrigger.Idle, "음.. 뭐.. 할까.. 요..?"),
             DialogueLine(t, DialogueTrigger.Idle, "혹시.. 심심.. 하세요..?"),
+            DialogueLine(t, DialogueTrigger.Idle, "저.. 우클릭.. 해보시면.. 여러 가지.. 있.. 어요.."),
 
             DialogueLine(t, DialogueTrigger.Smile, "헤.. 히.."),
             DialogueLine(t, DialogueTrigger.Smile, "아.. 감사.. 합니다.."),
@@ -88,6 +89,7 @@ object DialogueCatalog {
 
             DialogueLine(t, DialogueTrigger.Idle, "뭐.. 하시나요..?"),
             DialogueLine(t, DialogueTrigger.Idle, "오늘도 좋은 하루예요.."),
+            DialogueLine(t, DialogueTrigger.Idle, "혹시.. 저 우클릭 해보셨어요..? 메뉴 있어요 헤헤"),
             DialogueLine(t, DialogueTrigger.Smile, "헤헤..!"),
             DialogueLine(t, DialogueTrigger.Smile, "기분.. 좋아요..!"),
             DialogueLine(t, DialogueTrigger.Boring, "음.. 심심한데.."),
@@ -118,6 +120,7 @@ object DialogueCatalog {
 
             DialogueLine(t, DialogueTrigger.Idle, "음~ 뭐하지?"),
             DialogueLine(t, DialogueTrigger.Idle, "오늘 뭔가 좋은 일 있어?"),
+            DialogueLine(t, DialogueTrigger.Idle, "나 우클릭해봐~ 뭐 나올걸?"),
             DialogueLine(t, DialogueTrigger.Smile, "헤헤, 좋다!"),
             DialogueLine(t, DialogueTrigger.Smile, "너 보면 기분 좋아져."),
             DialogueLine(t, DialogueTrigger.Boring, "심심해 죽겠다..."),
@@ -148,6 +151,7 @@ object DialogueCatalog {
 
             DialogueLine(t, DialogueTrigger.Idle, "너 뭐해? 궁금해."),
             DialogueLine(t, DialogueTrigger.Idle, "그냥.. 네 옆에 있는 게 좋아."),
+            DialogueLine(t, DialogueTrigger.Idle, "나 우클릭하면 뭐 하고 싶은지 말할 수 있어!"),
             DialogueLine(t, DialogueTrigger.Smile, "너 옆에 있으면 다 좋아."),
             DialogueLine(t, DialogueTrigger.Smile, "에헤, 너도 웃어봐!"),
             DialogueLine(t, DialogueTrigger.Boring, "너 어디야.. 심심하다."),
@@ -178,6 +182,7 @@ object DialogueCatalog {
 
             DialogueLine(t, DialogueTrigger.Idle, "네가 있으니까 다 괜찮아."),
             DialogueLine(t, DialogueTrigger.Idle, "말 안 해도 알지, 그치?"),
+            DialogueLine(t, DialogueTrigger.Idle, "우클릭 한 번, 너만을 위한 메뉴 준비해뒀어."),
             DialogueLine(t, DialogueTrigger.Smile, "너 때문에 웃어."),
             DialogueLine(t, DialogueTrigger.Smile, "행복하다, 진짜로."),
             DialogueLine(t, DialogueTrigger.Boring, "네가 없으니 세상이 조용하다."),

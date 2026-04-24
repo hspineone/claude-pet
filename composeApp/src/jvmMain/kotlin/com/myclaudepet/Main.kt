@@ -126,6 +126,12 @@ fun main() {
                             walkOffsetX = walkOffsetX,
                             walkOffsetY = walkOffsetY,
                             facingRight = facingRight,
+                            windowVisible = windowVisible,
+                            onToggleWindowVisible = { windowVisible = !windowVisible },
+                            onExit = {
+                                stateHolder.stop()
+                                exitApplication()
+                            },
                         )
                     }
                 }
