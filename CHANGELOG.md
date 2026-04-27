@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.7](https://github.com/HyeonSeok7/claude-pet/compare/v1.1.6...v1.1.7) (2026-04-27)
+
+
+### 버그 수정
+
+* 말풍선 길이로 인해 포만감/친밀도 UI가 가려지는 현상 수정 ([#25](https://github.com/HyeonSeok7/claude-pet/issues/25)) ([9ea0462](https://github.com/HyeonSeok7/claude-pet/commit/9ea04624b9f04cdcd7d6183a1487368b6ffa2091))
+
 ## [1.1.0](https://github.com/HyeonSeok7/claude-pet/compare/v1.0.1...v1.1.0) (2026-04-23)
 
 
