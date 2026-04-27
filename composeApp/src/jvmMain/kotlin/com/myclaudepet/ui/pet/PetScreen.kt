@@ -6,9 +6,7 @@ import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.runtime.Composable
@@ -34,8 +32,12 @@ fun PetScreen(
     modifier: Modifier = Modifier,
 ) {
     Box(modifier = modifier.fillMaxSize()) {
+        // 펫·말풍선 영역. Stats 영역(고정 높이)을 침범하지 않도록 bottom padding 으로 격리.
+        // 말풍선이 길어 column 합이 윈도우 높이를 초과해도 Stats 는 별도 자식이라 영향 없음.
         Column(
-            modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 4.dp),
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .padding(bottom = PetDimens.StatsAreaHeight + 8.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Bottom,
         ) {
@@ -80,12 +82,15 @@ fun PetScreen(
                         },
                 )
             }
-
-            Spacer(Modifier.height(4.dp))
-            StatsOverlay(
-                pet = state.pet,
-                modifier = Modifier.width(PetDimens.PetSize),
-            )
         }
+
+        // 포만감/친밀도 게이지는 항상 하단에 고정. 말풍선 길이/펫 애니메이션과 독립.
+        StatsOverlay(
+            pet = state.pet,
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .padding(bottom = 4.dp)
+                .width(PetDimens.PetSize),
+        )
     }
 }
