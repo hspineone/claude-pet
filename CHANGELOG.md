@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.0](https://github.com/HyeonSeok7/claude-pet/compare/v1.1.8...v1.2.0) (2026-04-28)
+
+
+### 새 기능
+
+* Windows MSI 인스톨러와 EXE 에 앱 로고 적용 — app-icon.png 에서 16~256px 멀티 사이즈 .ico 생성 후 nativeDistributions.windows.iconFile 연결 ([#31](https://github.com/HyeonSeok7/claude-pet/issues/31)) ([e50f347](https://github.com/HyeonSeok7/claude-pet/commit/e50f347d85aa62f6a1611f883a2030703bae89a6))
+
 ## [1.1.8](https://github.com/HyeonSeok7/claude-pet/compare/v1.1.7...v1.1.8) (2026-04-28)
 
 
