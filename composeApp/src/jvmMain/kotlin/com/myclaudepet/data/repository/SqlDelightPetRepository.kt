@@ -5,6 +5,7 @@ import app.cash.sqldelight.coroutines.mapToOne
 import com.myclaudepet.data.install.InstallId
 import com.myclaudepet.data.time.Clock
 import com.myclaudepet.db.PetDatabase
+import com.myclaudepet.domain.model.Accessory
 import com.myclaudepet.domain.model.Affinity
 import com.myclaudepet.domain.model.Pet
 import com.myclaudepet.domain.model.PetAnimationState
@@ -81,6 +82,10 @@ class SqlDelightPetRepository(
         queries.incrementKeystrokes(by, clock.nowMillis())
     }
 
+    override suspend fun setAccessory(value: Accessory?): Unit = withContext(Dispatchers.IO) {
+        queries.updateAccessory(accessoryId = value?.id, updatedAt = clock.nowMillis())
+    }
+
     override suspend fun resetProgress(): Unit = withContext(Dispatchers.IO) {
         queries.resetProgress(clock.nowMillis())
     }
@@ -93,5 +98,6 @@ class SqlDelightPetRepository(
             .getOrDefault(PetAnimationState.Default),
         keystrokes = keystrokes,
         updatedAt = Instant.fromEpochMilliseconds(updated_at),
+        equippedAccessory = Accessory.fromId(equipped_accessory),
     )
 }

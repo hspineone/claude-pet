@@ -1,5 +1,6 @@
 package com.myclaudepet.ui.state
 
+import com.myclaudepet.domain.model.Accessory
 import com.myclaudepet.domain.model.PetPosition
 
 sealed interface PetUiEvent {
@@ -16,4 +17,5 @@ sealed interface PetUiEvent {
     data object CancelReset : PetUiEvent
     data object OpenUpdateLink : PetUiEvent
     data object DismissUpdate : PetUiEvent
+    data class SetAccessory(val value: Accessory?) : PetUiEvent
 }

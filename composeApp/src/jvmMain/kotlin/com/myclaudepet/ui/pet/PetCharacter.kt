@@ -24,6 +24,7 @@ import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.painter.BitmapPainter
 import androidx.compose.ui.layout.ContentScale
+import com.myclaudepet.domain.model.Accessory
 import com.myclaudepet.domain.model.PetAnimationState
 import com.myclaudepet.domain.model.PetMood
 import com.myclaudepet.ui.theme.PetColors
@@ -36,6 +37,7 @@ fun PetCharacter(
     walkOffsetX: Float = 0f,
     walkOffsetY: Float = 0f,
     facingRight: Boolean = true,
+    accessory: Accessory? = null,
     modifier: Modifier = Modifier,
 ) {
     val jumpOffsetDp by animateFloatAsState(
@@ -51,7 +53,7 @@ fun PetCharacter(
             y = (walkOffsetY + jumpOffsetDp).dp,
         )
         .scale(scaleX = scaleX, scaleY = 1f)
-    val sprite = rememberPetSprite(state)
+    val sprite = rememberPetSprite(state, accessory)
     if (sprite != null) {
         Image(
             painter = BitmapPainter(sprite),

@@ -1,5 +1,7 @@
 package com.myclaudepet.ui.theme
 
+import com.myclaudepet.domain.model.Accessory
+
 object PetStrings {
     const val AppName = "Claude Pet"
     const val TrayShow = "펫 보이기"
@@ -7,6 +9,13 @@ object PetStrings {
     const val TrayFeed = "🍚 밥 주기"
     const val TrayQuit = "종료"
     const val TrayStats = "상태 보기"
+    const val TrayWardrobe = "👕 옷장"
+    const val AccessoryNone = "없음"
+    const val AccessoryRoundGlasses = "동그란 안경"
+    const val AccessoryYellowBeanie = "노란 비니"
+    const val AccessoryRedScarf = "빨간 머플러"
+    const val AccessoryMiniLaptop = "미니 노트북"
+    const val AccessoryHeadphones = "헤드폰"
 
     // 리셋 UX
     const val MenuReset = "처음부터 시작…"
@@ -45,4 +54,12 @@ object PetStrings {
     const val LabelHungry = "배고파요…"
     const val LabelFed = "맛있어요!"
     const val LabelWalking = "산책 중…"
+
+    fun accessoryLabel(accessory: Accessory): String = when (accessory) {
+        Accessory.RoundGlasses -> AccessoryRoundGlasses
+        Accessory.YellowBeanie -> AccessoryYellowBeanie
+        Accessory.RedScarf -> AccessoryRedScarf
+        Accessory.MiniLaptop -> AccessoryMiniLaptop
+        Accessory.Headphones -> AccessoryHeadphones
+    }
 }

@@ -132,6 +132,11 @@ class PetStateHolder(
         PetUiEvent.CancelReset -> onCancelReset()
         PetUiEvent.OpenUpdateLink -> onOpenUpdateLink()
         PetUiEvent.DismissUpdate -> onDismissUpdate()
+        is PetUiEvent.SetAccessory -> onSetAccessory(event)
+    }
+
+    private fun onSetAccessory(event: PetUiEvent.SetAccessory) {
+        scope.launch { repository.setAccessory(event.value) }
     }
 
     private fun onOpenUpdateLink() {

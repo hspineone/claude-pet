@@ -73,6 +73,7 @@ fun PetScreen(
                     walkOffsetX = walkOffsetX,
                     walkOffsetY = walkOffsetY,
                     facingRight = facingRight,
+                    accessory = state.pet.equippedAccessory,
                     modifier = Modifier
                         .pointerInput(Unit) {
                             detectTapGestures(

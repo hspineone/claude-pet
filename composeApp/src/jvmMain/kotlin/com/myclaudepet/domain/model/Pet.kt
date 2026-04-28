@@ -9,6 +9,7 @@ data class Pet(
     val animationState: PetAnimationState,
     val keystrokes: Long,
     val updatedAt: Instant,
+    val equippedAccessory: Accessory? = null,
 ) {
     val mood: PetMood get() = satiation.mood
     val level: Int get() = affinity.level

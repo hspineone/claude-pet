@@ -36,6 +36,6 @@ class DriverFactory {
     }
 
     private companion object {
-        const val SCHEMA_VERSION = 2L
+        const val SCHEMA_VERSION = 3L
     }
 }

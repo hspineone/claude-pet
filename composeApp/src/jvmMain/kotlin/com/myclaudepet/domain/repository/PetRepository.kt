@@ -1,5 +1,6 @@
 package com.myclaudepet.domain.repository
 
+import com.myclaudepet.domain.model.Accessory
 import com.myclaudepet.domain.model.Affinity
 import com.myclaudepet.domain.model.Pet
 import com.myclaudepet.domain.model.PetAnimationState
@@ -15,5 +16,6 @@ interface PetRepository {
     suspend fun updateAffinity(value: Affinity)
     suspend fun updateAnimationState(state: PetAnimationState)
     suspend fun incrementKeystrokes(by: Long = 1L)
+    suspend fun setAccessory(value: Accessory?)
     suspend fun resetProgress()
 }

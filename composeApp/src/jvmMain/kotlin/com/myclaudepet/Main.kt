@@ -17,6 +17,7 @@ import androidx.compose.ui.window.application
 import androidx.compose.ui.window.rememberWindowState
 import com.myclaudepet.data.platform.ScreenDefaults
 import com.myclaudepet.di.appModule
+import com.myclaudepet.domain.model.Accessory
 import com.myclaudepet.domain.model.PetPosition
 import com.myclaudepet.domain.repository.PetRepository
 import com.myclaudepet.ui.pet.PermissionDialog
@@ -176,6 +177,27 @@ fun main() {
                     onClick = { windowVisible = !windowVisible },
                 )
                 Item(PetStrings.TrayFeed, onClick = { stateHolder.onEvent(PetUiEvent.Feed) })
+                // 옷장 — Default 상태일 때 6 항목 라디오(없음 + 5종) 로 작동.
+                // CheckboxItem 의 해제 콜백은 무시해 라디오 의미를 유지(빼기는 "없음" 클릭).
+                val currentAccessory = uiState?.pet?.equippedAccessory
+                Menu(PetStrings.TrayWardrobe) {
+                    CheckboxItem(
+                        text = PetStrings.AccessoryNone,
+                        checked = currentAccessory == null,
+                        onCheckedChange = { selected ->
+                            if (selected) stateHolder.onEvent(PetUiEvent.SetAccessory(null))
+                        },
+                    )
+                    Accessory.ALL.forEach { acc ->
+                        CheckboxItem(
+                            text = PetStrings.accessoryLabel(acc),
+                            checked = currentAccessory == acc,
+                            onCheckedChange = { selected ->
+                                if (selected) stateHolder.onEvent(PetUiEvent.SetAccessory(acc))
+                            },
+                        )
+                    }
+                }
                 Item(
                     PetStrings.TrayQuit,
                     onClick = {

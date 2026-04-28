@@ -1,21 +1,22 @@
 CREATE TABLE IF NOT EXISTS pet_state (
-    id              INTEGER NOT NULL PRIMARY KEY,
-    x               INTEGER NOT NULL,
-    y               INTEGER NOT NULL,
-    satiation       REAL    NOT NULL,
-    affinity        INTEGER NOT NULL,
-    keystrokes      INTEGER NOT NULL,
-    animation_state TEXT    NOT NULL DEFAULT 'Default',
-    install_id      TEXT    NOT NULL DEFAULT '',
-    updated_at      INTEGER NOT NULL
+    id                  INTEGER NOT NULL PRIMARY KEY,
+    x                   INTEGER NOT NULL,
+    y                   INTEGER NOT NULL,
+    satiation           REAL    NOT NULL,
+    affinity            INTEGER NOT NULL,
+    keystrokes          INTEGER NOT NULL,
+    animation_state     TEXT    NOT NULL DEFAULT 'Default',
+    install_id          TEXT    NOT NULL DEFAULT '',
+    equipped_accessory  TEXT,
+    updated_at          INTEGER NOT NULL
 );
 
 seedDefault:
-INSERT OR IGNORE INTO pet_state(id, x, y, satiation, affinity, keystrokes, animation_state, install_id, updated_at)
-VALUES (1, :x, :y, 100.0, 0, 0, 'Default', '', :updatedAt);
+INSERT OR IGNORE INTO pet_state(id, x, y, satiation, affinity, keystrokes, animation_state, install_id, equipped_accessory, updated_at)
+VALUES (1, :x, :y, 100.0, 0, 0, 'Default', '', NULL, :updatedAt);
 
 selectPet:
-SELECT x, y, satiation, affinity, keystrokes, animation_state, updated_at
+SELECT x, y, satiation, affinity, keystrokes, animation_state, equipped_accessory, updated_at
 FROM pet_state
 WHERE id = 1;
 
@@ -40,11 +41,15 @@ UPDATE pet_state SET install_id = :installId, updated_at = :updatedAt WHERE id =
 incrementKeystrokes:
 UPDATE pet_state SET keystrokes = keystrokes + :delta, updated_at = :updatedAt WHERE id = 1;
 
+updateAccessory:
+UPDATE pet_state SET equipped_accessory = :accessoryId, updated_at = :updatedAt WHERE id = 1;
+
 resetProgress:
 UPDATE pet_state
 SET satiation = 100.0,
     affinity = 0,
     keystrokes = 0,
     animation_state = 'Default',
+    equipped_accessory = NULL,
     updated_at = :updatedAt
 WHERE id = 1;

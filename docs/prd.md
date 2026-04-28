@@ -175,3 +175,45 @@ v1 완료 조건:
 - [ ] macOS 기존 시나리오(IntelliJ·Terminal·Code 포그라운드, Claude CLI 감지) 전부 회귀 없음
 - [ ] `./gradlew :composeApp:packageDmg` 및 `packageMsi` 결과 번들에서 전 기능 동작
 - [ ] `progress.md` 의 Phase 9 체크박스 전부 완료
+
+---
+
+## 11. v4 — 액세서리 잠금해제 시스템 (사이클 A.0 · MVP)
+
+**배경**: 호감도와 작업 감지로 키우는 보람은 있지만, 시각적 변화가 캐릭터 본체 표정에만 한정되어 "내 펫" 정체성·꾸미기 욕구를 충족하지 못함. 이 사이클은 *Single 모델* (한 번에 1개 + 없음 라디오) 로 액세서리 시스템의 골격을 깔고, 추후 다중 동시 착용·호감도 게이트는 별도 사이클로 점진 확장한다.
+
+### 11.1 핵심 원칙
+
+1. 액세서리 자산은 "캐릭터 + 액세서리 합쳐진 PNG" 한 세트로만 존재 → 한 번에 한 종만 시각 적용 가능.
+2. Default 상태에서만 액세서리 PNG 노출. 다른 상태(Smile/Jumping/...) 전이 시 base PNG 로 자동 폴백 → 자산 분리 전엔 상태 전이 시 액세서리가 사라지는 동작이 정직.
+3. 잠금해제 게이트는 본 사이클에선 미적용 (모든 액세서리 즉시 선택 가능). 호감도 마일스톤 게이트는 사이클 B 로 이관.
+
+### 11.2 추가 기능 요구사항 (EARS)
+
+| ID | EARS |
+|---|---|
+| FR-26 | WHEN 사용자가 트레이 메뉴 "👕 옷장" 의 라디오 항목(없음 + 5종)에서 하나를 선택하면 SHALL 즉시 펫에 적용되고 DB(`pet_state.equipped_accessory`) 에 영속된다. |
+| FR-27 | WHEN 펫 상태가 Default 이고 IF 액세서리가 장착되어 있으면 SHALL `pet/idle_<accessoryId>.png` 로 렌더한다. |
+| FR-28 | WHEN 펫 상태가 Default 이외(Smile/Jumping/Touch/Working*/Hungry/Fed/Walking/Boring) 이면 SHALL 기존 base 스프라이트로 렌더하여 액세서리는 자동으로 노출되지 않는다. |
+| FR-29 | WHEN 사용자가 "처음부터 시작" 으로 진행 데이터를 초기화하면 SHALL `equipped_accessory` 도 NULL 로 리셋된다. |
+
+### 11.3 비기능 요구사항
+
+- NFR-09: 스키마 마이그레이션은 기존 `PRAGMA user_version` 방식과 동일 — `SCHEMA_VERSION` 을 2 → 3 으로 bump 해 기존 사용자의 `pet_state` 가 재생성된다 (진행 데이터 손실 발생, install_id 이질 시 리셋과 동일한 UX 맥락에서 수용).
+- NFR-10: 액세서리 PNG 5장 합 약 1.4 MB — 번들 크기 영향 미미.
+
+### 11.4 Out of Scope (사이클 A.0)
+
+- 다중 동시 착용 (β 모델) — 단독 액세서리 PNG 자산 분리 후 별도 사이클
+- 호감도 마일스톤 잠금해제 (사이클 B)
+- 9개 상태(Smile/Jumping 등) 에 대한 액세서리 별도 자산
+- 옷장 미리보기 윈도우 / 호버 미리보기
+- 액세서리 추가 신규 자산 (시즌·직업·이벤트 컨셉)
+
+### 11.5 Completion Promise
+
+- [ ] DB 컬럼 `equipped_accessory TEXT NULL` 영속, install_id 리셋과 동일하게 마이그레이션 동작
+- [ ] 트레이 옷장 메뉴 6 항목(없음 + 5종) 라디오 동작
+- [ ] Default 상태에서 액세서리 PNG 정상 렌더, 다른 상태 전이 시 base 폴백
+- [ ] `./gradlew :composeApp:compileKotlinJvm` 통과
+- [ ] `./gradlew :composeApp:run` 으로 실제 6 항목 토글 + 영속(앱 재시작 후 유지) 확인
