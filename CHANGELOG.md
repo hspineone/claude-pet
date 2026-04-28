@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.1.8](https://github.com/HyeonSeok7/claude-pet/compare/v1.1.7...v1.1.8) (2026-04-28)
+
+
+### 버그 수정
+
+* **ci:** release-please pull-request-title-pattern 제거 — release 단계 abort 해소 ([#28](https://github.com/HyeonSeok7/claude-pet/issues/28)) ([24ee5b6](https://github.com/HyeonSeok7/claude-pet/commit/24ee5b69b494c64e7d3931911766b14bb1c98835))
+* release-please PR 타이틀에 scope 가 박히지 않도록 pattern 명시 — chore(main) 표기 제거하고 ${version} 토큰 유지로 release 단계 abort 도 회피 ([#30](https://github.com/HyeonSeok7/claude-pet/issues/30)) ([a822ce4](https://github.com/HyeonSeok7/claude-pet/commit/a822ce49e1db126e56b3d881e42c56e70e4d0e8b))
+
 ## [1.1.7](https://github.com/HyeonSeok7/claude-pet/compare/v1.1.6...v1.1.7) (2026-04-27)
 
 
