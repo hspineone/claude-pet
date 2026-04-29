@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.4.0](https://github.com/HyeonSeok7/claude-pet/compare/v1.3.0...v1.4.0) (2026-04-29)
+
+
+### 새 기능
+
+* Windows 펫 우클릭 메뉴에 트레이 기능 통합 (옷장 평면 6항목 + 현재 장착 ✓) ([#35](https://github.com/HyeonSeok7/claude-pet/issues/35)) ([e77a014](https://github.com/HyeonSeok7/claude-pet/commit/e77a0147016a50a74bddd5b5da7750d8f0fd70b5))
+
 ## [1.3.0](https://github.com/HyeonSeok7/claude-pet/compare/v1.2.0...v1.3.0) (2026-04-29)
 
 
