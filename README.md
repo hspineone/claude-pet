@@ -82,10 +82,10 @@ Authenticode 서명 미적용으로 Windows Defender 가 실행을 차단할 수
 | 범주 | 동작 |
 |---|---|
 | **행동** | 10초마다 창 내부 왕복 산책 · 1/6 확률 점프 · 5분 방치 시 지루함 |
-| **반응** | 좌클릭 = 미소 · 더블클릭 = 점프 · 드래그 = 위치 저장 · **우클릭 = 메뉴** (밥 주기 / 보이기·숨기기 / 처음부터 시작 / 종료) |
+| **반응** | 좌클릭 = 미소 · 더블클릭 = 점프 · 드래그 = 위치 저장 · **우클릭 = 메뉴** (macOS: 밥 주기 / 보이기·숨기기 / 처음부터 시작 / 종료, Windows: 밥 주기 / 옷장 6항목 / 처음부터 시작 / 종료) |
 | **생활** | 30초마다 포만감 -1 · 20 이하면 배고픔 · 타이핑이나 트레이·우클릭 🍚 밥주기로 회복 |
 | **호감도** | 100 pt / Lv, 5 티어 (존댓말 → 반말 → 애정). 100+ 줄 오리지널 대사, 우클릭 힌트 포함 |
-| **옷장** | 트레이 우클릭 → 👕 옷장 라디오 6항목 (없음 + 동그란 안경 / 노란 비니 / 빨간 머플러 / 미니 노트북 / 헤드폰). Default 상태에서 노출, 다른 상태 전이 시 자동 폴백. 영속 |
+| **옷장** | macOS = 메뉴바 트레이 → 👕 옷장 라디오 6항목, Windows = 펫 우클릭 메뉴에 평면 6항목 통합(현재 장착에 ✓). Default 상태에서 노출, 다른 상태 전이 시 자동 폴백. 영속 |
 | **작업 감지 (macOS)** | 포그라운드가 IDE · 에디터 · 터미널 · AI 채팅 앱이면 작업 모드. Claude CLI 프로세스도 인식. 화이트리스트: IntelliJ / PyCharm / WebStorm / GoLand / Android Studio / VS Code / Cursor / **Windsurf** / **Zed** / **Fleet** / Xcode / Terminal / iTerm2 / Sublime Text / Claude Desktop / ChatGPT Desktop |
 | **작업 감지 (Windows)** | 현재 미구현 — JNA + jpackage 서명 미적용 조합의 Defender 차단 이슈로 롤백, 다음 사이클에서 JDK 22+ FFM 또는 Authenticode 서명 도입 후 재시도 |
 | **Claude CLI 감지** | `ProcessHandle` 기반으로 macOS·Windows 공통. 전용 바이너리 / npm global / 쉘 래퍼 모두 감지 (command line 경로 토큰 매칭) |

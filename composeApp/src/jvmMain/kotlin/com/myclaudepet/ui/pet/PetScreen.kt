@@ -14,6 +14,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.unit.dp
+import com.myclaudepet.domain.model.Accessory
 import com.myclaudepet.ui.state.PetUiEvent
 import com.myclaudepet.ui.state.PetUiState
 import com.myclaudepet.ui.theme.PetDimens
@@ -29,6 +30,11 @@ fun PetScreen(
     windowVisible: Boolean = true,
     onToggleWindowVisible: () -> Unit = {},
     onExit: () -> Unit = {},
+    /**
+     * Windows 는 시스템 트레이 노출이 환경에 따라 불안정해 우클릭 메뉴에 트레이 기능 전체
+     * (옷장 포함) 를 통합한다. macOS 는 메뉴바 트레이가 안정적이라 우클릭은 기본 액션만.
+     */
+    isWindows: Boolean = false,
     modifier: Modifier = Modifier,
 ) {
     Box(modifier = modifier.fillMaxSize()) {
@@ -49,21 +55,13 @@ fun PetScreen(
 
             ContextMenuArea(
                 items = {
-                    listOf(
-                        ContextMenuItem(PetStrings.TrayFeed) {
-                            onEvent(PetUiEvent.Feed)
-                        },
-                        ContextMenuItem(
-                            if (windowVisible) PetStrings.TrayHide else PetStrings.TrayShow,
-                        ) {
-                            onToggleWindowVisible()
-                        },
-                        ContextMenuItem(PetStrings.MenuReset) {
-                            onEvent(PetUiEvent.RequestReset)
-                        },
-                        ContextMenuItem(PetStrings.TrayQuit) {
-                            onExit()
-                        },
+                    buildPetContextMenu(
+                        isWindows = isWindows,
+                        windowVisible = windowVisible,
+                        equipped = state.pet.equippedAccessory,
+                        onToggleWindowVisible = onToggleWindowVisible,
+                        onEvent = onEvent,
+                        onExit = onExit,
                     )
                 },
             ) {
@@ -94,4 +92,38 @@ fun PetScreen(
                 .width(PetDimens.PetSize),
         )
     }
+}
+
+/**
+ * Windows: 트레이 미사용을 가정하고 옷장(없음+5종) 까지 평면 노출 + Hide/Show 는 제거
+ * (트레이 없으면 다시 띄울 길이 사라지므로 종료만 허용).
+ * macOS: 메뉴바 트레이가 안정적이라 우클릭은 기본 4 항목(Feed / Hide·Show / Reset / Quit) 만.
+ */
+private fun buildPetContextMenu(
+    isWindows: Boolean,
+    windowVisible: Boolean,
+    equipped: Accessory?,
+    onToggleWindowVisible: () -> Unit,
+    onEvent: (PetUiEvent) -> Unit,
+    onExit: () -> Unit,
+): List<ContextMenuItem> = buildList {
+    add(ContextMenuItem(PetStrings.TrayFeed) { onEvent(PetUiEvent.Feed) })
+    if (isWindows) {
+        add(ContextMenuItem(PetStrings.wardrobeContextItem(null, equipped)) {
+            onEvent(PetUiEvent.SetAccessory(null))
+        })
+        Accessory.ALL.forEach { acc ->
+            add(ContextMenuItem(PetStrings.wardrobeContextItem(acc, equipped)) {
+                onEvent(PetUiEvent.SetAccessory(acc))
+            })
+        }
+    } else {
+        add(
+            ContextMenuItem(
+                if (windowVisible) PetStrings.TrayHide else PetStrings.TrayShow,
+            ) { onToggleWindowVisible() },
+        )
+    }
+    add(ContextMenuItem(PetStrings.MenuReset) { onEvent(PetUiEvent.RequestReset) })
+    add(ContextMenuItem(PetStrings.TrayQuit) { onExit() })
 }

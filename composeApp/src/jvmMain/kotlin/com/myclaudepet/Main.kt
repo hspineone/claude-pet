@@ -64,7 +64,8 @@ fun main() {
     // Windows 에서 Skiko 기본 렌더러(DirectX12) 가 transparent 윈도우의 알파 채널을
     // 완전히 투명으로 composite 하지 못해 펫 주변에 어두운 네모가 남는 현상 회피.
     // macOS(Metal) / Linux(OpenGL) 는 기본값 유지.
-    if (System.getProperty("os.name", "").lowercase().contains("win")) {
+    val isWindows = System.getProperty("os.name", "").lowercase().contains("win")
+    if (isWindows) {
         System.setProperty("skiko.renderApi", "OPENGL")
     }
 
@@ -140,6 +141,7 @@ fun main() {
                                 stateHolder.stop()
                                 exitApplication()
                             },
+                            isWindows = isWindows,
                         )
                     }
                 }

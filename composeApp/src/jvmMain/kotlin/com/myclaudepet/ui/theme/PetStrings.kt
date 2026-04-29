@@ -62,4 +62,14 @@ object PetStrings {
         Accessory.MiniLaptop -> AccessoryMiniLaptop
         Accessory.Headphones -> AccessoryHeadphones
     }
+
+    /**
+     * Windows 우클릭 컨텍스트 메뉴는 서브메뉴/체크박스 미지원 → 옷장을 평면 항목으로 풀고
+     * 현재 장착 항목에 ✓ 마크를 prefix 로 표기해 라디오 의미를 살린다.
+     */
+    fun wardrobeContextItem(accessory: Accessory?, equipped: Accessory?): String {
+        val name = if (accessory == null) AccessoryNone else accessoryLabel(accessory)
+        val mark = if (accessory == equipped) "  ✓" else "      "
+        return "👕 $name$mark"
+    }
 }
