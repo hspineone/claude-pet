@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.3.0](https://github.com/HyeonSeok7/claude-pet/compare/v1.2.0...v1.3.0) (2026-04-29)
+
+
+### 새 기능
+
+* 액세서리 잠금해제 시스템 MVP — 트레이 옷장으로 5종 토글 ([#33](https://github.com/HyeonSeok7/claude-pet/issues/33)) ([93d8719](https://github.com/HyeonSeok7/claude-pet/commit/93d871924fdef7a5fc9848c49032130bf0633c8c))
+
 ## [1.2.0](https://github.com/HyeonSeok7/claude-pet/compare/v1.1.8...v1.2.0) (2026-04-28)
 
 
